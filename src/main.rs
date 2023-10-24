@@ -314,6 +314,8 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         frame_counter: 0,
         rate: 7,
         state_number: 0,
+        is_facing_left: false,
+        sprite_width: sprites[0].sheet_region[2],
     };
 
     let fisherman_walking_animation: Animation = Animation {
@@ -321,6 +323,8 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         frame_counter: 0,
         rate: 7,
         state_number: 0,
+        is_facing_left: false,
+        sprite_width: sprites[0].sheet_region[2],
     };
 
     let acorn_animation: Animation = Animation {
@@ -328,10 +332,13 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         frame_counter: 0,
         rate: 7,
         state_number: 0,
+        is_facing_left: false,
+        sprite_width: sprites[0].sheet_region[2],
     };
 
     let mut fisherman = char_action::Char_action::new(
         sprites[0].screen_region,
+        sprites[0].sheet_region,
         vec![fisherman_idle_animation, fisherman_walking_animation],
         0,
         2.0,
@@ -557,7 +564,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                 // BIG TODO:
                 // find a way to set every sprite in 'sprites' to their appropriate new sheet regions and screen regions
-                sprites[fisherman.sprites_index].sheet_region = fisherman.animations[fisherman.current_animation_index].get_current_state();
+                sprites[fisherman.sprites_index].sheet_region = fisherman.get_current_animation_state();
                 sprites[fisherman.sprites_index].screen_region = fisherman.screen_region;
 
                 //sprites[acorn.sprites_index].screen_region = acorn.screen_region;
@@ -571,12 +578,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 let squirrel_y: f32 = sprites[fisherman.sprites_index].screen_region[1];
                 let mut squirrel_width: f32 = sprites[fisherman.sprites_index].screen_region[2];
                 let squirrel_height: f32 = sprites[fisherman.sprites_index].screen_region[3];
-
-                // adjusting for right facing squirrel
-                if fisherman.facing_right {
-                    squirrel_x += squirrel_width;
-                    squirrel_width *= -1.0;
-                }
 
                 /*
                 // Check for collisions

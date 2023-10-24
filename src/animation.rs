@@ -7,6 +7,9 @@ pub struct Animation {
     pub(crate) rate: i32,
     // state_number is which frame of the animation we're on
     pub(crate) state_number: usize,
+
+    pub(crate) is_facing_left: bool,
+    pub(crate) sprite_width: f32,
 }
 
 impl Animation {
@@ -17,12 +20,15 @@ impl Animation {
         // if enough frames have passed, go to the next frame of the animation
         if self.frame_counter > self.rate {
             self.state_number += 1;
+
             // if we've gone past the last frame of the animation, go back to the first frame
             if self.state_number >= self.states.len() as usize - 1 {
                 self.state_number = 0;
             }
             self.frame_counter = 0;
         }
+
+
     }
     pub fn stop(&mut self){
         while self.state_number != 0 {
@@ -30,6 +36,28 @@ impl Animation {
         }
     }
     pub fn get_current_state(&mut self) -> [f32; 4]{
+        if (self.is_facing_left){
+            if self.states[self.state_number][2] > 0.0 {
+                self.states[self.state_number][2] *= -1.0;
+                self.states[self.state_number][0] += self.sprite_width;
+            }
+              
+        }
+        else {
+            if self.states[self.state_number][2] < 0.0 {
+                self.states[self.state_number][2] *= -1.0;
+                self.states[self.state_number][0] -= self.sprite_width;
+            }            
+        }
+
         return self.states[self.state_number]
+    }
+
+    pub fn apply_face_left(&mut self){
+        self.is_facing_left = true;
+    }
+
+    pub fn apply_face_right(&mut self){
+        self.is_facing_left = false;
     }
 }
