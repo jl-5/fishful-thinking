@@ -13,6 +13,7 @@ use std::path::Path;
 use imageproc::rect::Rect;
 use rusttype::{Font, Scale};
 mod game_state;
+mod game_logic;
 mod char_action;
 mod gpus;
 mod input;
@@ -27,6 +28,8 @@ use wgpu::{
     CompositeAlphaMode, MultisampleState, 
 };
 
+use crate::game_logic::GameManager;
+
 #[repr(C)]
 #[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
 struct GPUSprite {
@@ -35,12 +38,10 @@ struct GPUSprite {
     sheet_region: [f32;4]
 }
 
-// In WGPU, we define an async function whose operation can be suspended and resumed.
-// This is because on web, we can't take over the main event loop and must leave it to
-// the browser.  On desktop, we'll just be running this function to completion.
 async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut gpu = gpus::WGPU::new(&window).await;
     let mut gs = game_state::init_game_state();
+    let mut gl: GameManager = game_logic::init_game_manager();
 
     let (squirrel_tex, mut squirrel_img) = gpus::WGPU::load_texture("fishful_content/fishful_spritesheet.png", Some("spritesheet"), &gpu.device, &gpu.queue).await.expect("Couldn't load squirrel sprite sheet");
     let view: wgpu::TextureView = squirrel_tex.create_view(&wgpu::TextureViewDescriptor::default());
@@ -193,11 +194,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         ],
     });
 
-    // Our specific "function" is going to be a draw call using our shaders. That's what we
-    // set up here, calling the result a render pipeline.  It's not only what shaders to use,
-    // but also how to interpret streams of vertices (e.g. as separate triangles or as a list of lines),
-    // whether to draw both the fronts and backs of triangles, and how many times to run the pipeline for
-    // things like multisampling antialiasing.
     let render_pipeline = gpu.device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(&pipeline_layout),
@@ -573,23 +569,29 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 //acorn.move_down();
 
                 if input.is_key_down(winit::event::VirtualKeyCode::Left) {
-
-                    fisherman.set_animation_index(1);
-                    fisherman.face_left();
-                    fisherman.walk();
-                    
+                    if !gl.is_currently_casted{
+                        fisherman.set_animation_index(1);
+                        fisherman.face_left();
+                        fisherman.walk();
+                    }
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Right) {
+                    if !gl.is_currently_casted{
+                        fisherman.set_animation_index(1);
+                        fisherman.face_right();
+                        fisherman.walk();
+                    }
 
-                    fisherman.set_animation_index(1);
-                    fisherman.face_right();
-                    fisherman.walk();
 
                 }else if input.is_key_down(winit::event::VirtualKeyCode::Space) {
                     fisherman.set_animation_index(2);
+                    gl.is_currently_casted = true;
                 }
                 else if input.is_key_up(winit::event::VirtualKeyCode::Left) || input.is_key_up(winit::event::VirtualKeyCode::Right){
-                    fisherman.set_animation_index(0);
+                    if !gl.is_currently_casted{
+                        fisherman.set_animation_index(0);
+                    }
+                    
                 }
 
 

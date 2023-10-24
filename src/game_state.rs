@@ -12,3 +12,6 @@ pub fn init_game_state() -> GameState {
         score_changing : false,
     }
 }
+
+impl GameState {
+}
