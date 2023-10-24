@@ -42,7 +42,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut gpu = gpus::WGPU::new(&window).await;
     let mut gs = game_state::init_game_state();
 
-    let (squirrel_tex, mut squirrel_img) = gpus::WGPU::load_texture("content/spritesheet.png", Some("squirrel"), &gpu.device, &gpu.queue).await.expect("Couldn't load squirrel sprite sheet");
+    let (squirrel_tex, mut squirrel_img) = gpus::WGPU::load_texture("nut_war_content/spritesheet.png", Some("squirrel"), &gpu.device, &gpu.queue).await.expect("Couldn't load squirrel sprite sheet");
     let view: wgpu::TextureView = squirrel_tex.create_view(&wgpu::TextureViewDescriptor::default());
     let sampler = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
 
