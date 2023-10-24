@@ -258,41 +258,43 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
     let sprite_sheet_dimensions = (542.0, 356.0);
 
+
+    let mut fisherman_width_offset = 15.0;
     // frames will be a series of frames 
     let mut fisherman_idle_frames: Vec<[f32; 4]> = vec![
 
         // frame 1 sheet position
-        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 0.0), 214.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 0.0), 214.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
         
         // frame 2 sheet position
-        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 1.0), 214.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 1.0), 214.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
          
         // frame 3 sheet position
-        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 214.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 214.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
 
         // frame 4 sheet position
-        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 3.0), 214.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 3.0), 214.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
     ];
 
     let mut fisherman_walking_frames: Vec<[f32; 4]> = vec![
 
     // frame 1 sheet position
-    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 0.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 0.0), 264.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
     
     // frame 2 sheet position
-    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 1.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 1.0), 264.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
      
     // frame 3 sheet position
-    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 264.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
 
     // frame 4 sheet position
-    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 3.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 3.0), 264.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
 
     // frame 5 sheet position
-    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 4.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 4.0), 264.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
 
     // frame 6 sheet position
-    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 5.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 5.0), 264.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_width_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
 
     ];
 
@@ -312,7 +314,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let fisherman_idle_animation: Animation = Animation {
         states: fisherman_idle_frames,
         frame_counter: 0,
-        rate: 7,
+        rate: 12,
         state_number: 0,
         is_facing_left: false,
         sprite_width: sprites[0].sheet_region[2],
@@ -321,7 +323,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let fisherman_walking_animation: Animation = Animation {
         states: fisherman_walking_frames,
         frame_counter: 0,
-        rate: 7,
+        rate: 12,
         state_number: 0,
         is_facing_left: false,
         sprite_width: sprites[0].sheet_region[2],
