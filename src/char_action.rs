@@ -54,6 +54,18 @@ impl Char_action {
             self.screen_region[0] = rand::thread_rng().gen_range(0..1025) as f32;
         }
     }
+    pub fn move_right(&mut self) {
+        self.screen_region[0] -= self.speed;
+
+        if self.screen_region[0] <= 0.0 {
+            self.screen_region[0] = 1024.0;
+            self.screen_region[1] = rand::thread_rng().gen_range(0..769) as f32;
+        }
+    }
+    pub fn reset_x(&mut self){
+        self.screen_region[0] = 1024.0;
+        self.screen_region[1] = rand::thread_rng().gen_range(0..769) as f32;
+    }
     pub fn reset_y(&mut self){
         self.screen_region[1] = 768.0;
         self.screen_region[0] = rand::thread_rng().gen_range(0..1025) as f32;
