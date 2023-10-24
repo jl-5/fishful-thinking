@@ -2,7 +2,7 @@ use rand::Rng;
 use crate::Animation;
 pub struct Char_action {
     pub screen_region: [f32; 4],
-    pub animation: Animation,
+    pub animations: Vec<Animation>,
     pub speed: f32,
     pub facing_right: bool,
     pub sprites_index: usize,
@@ -11,12 +11,12 @@ pub struct Char_action {
 impl Char_action {
 
     pub fn new(screen_re: [f32; 4],
-        anim: Animation,
+        anims: Vec<Animation>,
         spe: f32,
         facing_rig: bool,
         sprites_ind: usize,) -> Char_action {
             Self { screen_region: (screen_re), 
-                animation: (anim), 
+                animations: (anims), 
                 speed: (spe), 
                 facing_right: (facing_rig), 
                 sprites_index: (sprites_ind) }
