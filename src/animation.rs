@@ -10,6 +10,8 @@ pub struct Animation {
 
     pub(crate) is_facing_left: bool,
     pub(crate) sprite_width: f32,
+
+    pub(crate) is_looping: bool,
 }
 
 impl Animation {
@@ -21,10 +23,13 @@ impl Animation {
         if self.frame_counter > self.rate {
             self.state_number += 1;
 
-            // if we've gone past the last frame of the animation, go back to the first frame
-            if self.state_number >= self.states.len() as usize - 1 {
-                self.state_number = 0;
+            if self.is_looping {
+                // if we've gone past the last frame of the animation, go back to the first frame
+                if self.state_number >= self.states.len() as usize - 1 {
+                    self.state_number = 0;
+                }
             }
+
             self.frame_counter = 0;
         }
 
@@ -36,6 +41,11 @@ impl Animation {
         }
     }
     pub fn get_current_state(&mut self) -> [f32; 4]{
+
+        if !self.is_looping && self.state_number > self.states.len() - 1 {
+            self.state_number = self.states.len() - 1;
+
+        }
         if (self.is_facing_left){
             if self.states[self.state_number][2] > 0.0 {
                 self.states[self.state_number][2] *= -1.0;

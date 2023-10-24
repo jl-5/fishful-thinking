@@ -298,6 +298,23 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
     ];
 
+
+    let mut fisherman_casting_offset = 0.0;
+    let mut fisherman_casting_frames: Vec<[f32; 4]> = vec![
+
+    // frame 1 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 5.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
+    
+    // frame 2 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 4.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
+     
+    // frame 3 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 3.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
+
+    // frame 4 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
+    ];
+
     let mut sprites: Vec<GPUSprite> = vec![
         // FISHERMAN
     GPUSprite {
@@ -318,6 +335,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         state_number: 0,
         is_facing_left: false,
         sprite_width: sprites[0].sheet_region[2],
+        is_looping: true,
     };
 
     let fisherman_walking_animation: Animation = Animation {
@@ -327,8 +345,19 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         state_number: 0,
         is_facing_left: false,
         sprite_width: sprites[0].sheet_region[2],
+        is_looping: true,
     };
 
+    let fisherman_casting_animation: Animation = Animation {
+        states: fisherman_casting_frames,
+        frame_counter: 0,
+        rate: 12,
+        state_number: 0,
+        is_facing_left: false,
+        sprite_width: 0.0885608856,
+        is_looping: false,
+    };
+/* 
     let acorn_animation: Animation = Animation {
         states: [sprites[1].sheet_region].to_vec(),
         frame_counter: 0,
@@ -337,11 +366,11 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_facing_left: false,
         sprite_width: sprites[0].sheet_region[2],
     };
-
+*/
     let mut fisherman = char_action::Char_action::new(
         sprites[0].screen_region,
         sprites[0].sheet_region,
-        vec![fisherman_idle_animation, fisherman_walking_animation],
+        vec![fisherman_idle_animation, fisherman_walking_animation, fisherman_casting_animation],
         0,
         2.0,
         true,
@@ -548,7 +577,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                     fisherman.set_animation_index(1);
                     fisherman.face_left();
                     fisherman.walk();
-                    fisherman.animations[fisherman.current_animation_index].tick();
                     
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Right) {
@@ -556,16 +584,19 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                     fisherman.set_animation_index(1);
                     fisherman.face_right();
                     fisherman.walk();
-                    fisherman.animations[fisherman.current_animation_index].tick();
 
+                }else if input.is_key_down(winit::event::VirtualKeyCode::Space) {
+                    fisherman.set_animation_index(2);
                 }
-                else if input.is_key_up(winit::event::VirtualKeyCode::Left)  || input.is_key_up(winit::event::VirtualKeyCode::Right){
+                else if input.is_key_up(winit::event::VirtualKeyCode::Left) || input.is_key_up(winit::event::VirtualKeyCode::Right){
                     fisherman.set_animation_index(0);
-                    fisherman.animations[fisherman.current_animation_index].tick();
                 }
+
 
                 // BIG TODO:
                 // find a way to set every sprite in 'sprites' to their appropriate new sheet regions and screen regions
+                // ALSO ticks their animations!
+                fisherman.animations[fisherman.current_animation_index].tick();
                 sprites[fisherman.sprites_index].sheet_region = fisherman.get_current_animation_state();
                 sprites[fisherman.sprites_index].screen_region = fisherman.screen_region;
 
