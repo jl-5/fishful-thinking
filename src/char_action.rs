@@ -74,4 +74,8 @@ impl Char_action {
         self.screen_region[1] = 768.0;
         self.screen_region[0] = rand::thread_rng().gen_range(0..1025) as f32;
     }
+
+    pub fn set_animation_index(&mut self, index: usize) {
+        self.current_animation_index = index;
+    }
 }

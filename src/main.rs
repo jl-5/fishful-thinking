@@ -272,10 +272,29 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
         // frame 4 sheet position
         [(((192.0/sprite_sheet_dimensions.0)/4.0) * 3.0), 214.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
-        /*
+    ];
 
+    let mut fisherman_walking_frames: Vec<[f32; 4]> = vec![
 
-    */ ];
+    // frame 1 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 0.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+    
+    // frame 2 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 1.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+     
+    // frame 3 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+
+    // frame 4 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 3.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+
+    // frame 5 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 4.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+
+    // frame 6 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 5.0), 264.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+
+    ];
 
     let mut sprites: Vec<GPUSprite> = vec![
         // FISHERMAN
@@ -297,6 +316,13 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         state_number: 0,
     };
 
+    let fisherman_walking_animation: Animation = Animation {
+        states: fisherman_walking_frames,
+        frame_counter: 0,
+        rate: 7,
+        state_number: 0,
+    };
+
     let acorn_animation: Animation = Animation {
         states: [sprites[1].sheet_region].to_vec(),
         frame_counter: 0,
@@ -306,7 +332,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
     let mut fisherman = char_action::Char_action::new(
         sprites[0].screen_region,
-        vec![fisherman_idle_animation],
+        vec![fisherman_idle_animation, fisherman_walking_animation],
         0,
         2.0,
         true,
@@ -510,6 +536,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                 if input.is_key_down(winit::event::VirtualKeyCode::Left) {
 
+                    fisherman.set_animation_index(1);
                     fisherman.face_left();
                     fisherman.walk();
                     fisherman.animations[fisherman.current_animation_index].tick();
@@ -517,12 +544,14 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Right) {
 
+                    fisherman.set_animation_index(1);
                     fisherman.face_right();
                     fisherman.walk();
                     fisherman.animations[fisherman.current_animation_index].tick();
 
                 }
                 else if input.is_key_up(winit::event::VirtualKeyCode::Left)  || input.is_key_up(winit::event::VirtualKeyCode::Right){
+                    fisherman.set_animation_index(0);
                     fisherman.animations[fisherman.current_animation_index].tick();
                 }
 
