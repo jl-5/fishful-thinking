@@ -301,7 +301,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut sprites: Vec<GPUSprite> = vec![
         // FISHERMAN
     GPUSprite {
-        screen_region: [100.0, 100.0, 200.0, 200.0],
+        screen_region: [100.0, 600.0, 100.0, 100.0],
         sheet_region: fisherman_idle_frames[0],   
     },
         // NUT
