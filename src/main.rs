@@ -28,7 +28,7 @@ use wgpu::{
     CompositeAlphaMode, MultisampleState, 
 };
 
-use crate::game_logic::GameManager;
+use crate::{game_logic::GameManager, char_action::Char_action};
 
 #[repr(C)]
 #[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
@@ -311,16 +311,24 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
     ];
 
+    // hook is just one frame
+    let mut hook_frames: Vec<[f32; 4]> = vec![
+
+        // frame 1 sheet position
+        [291.0/sprite_sheet_dimensions.0, 255.0/sprite_sheet_dimensions.1, 100.0/sprite_sheet_dimensions.0, 100.0/sprite_sheet_dimensions.1],
+    ];
+
     let mut sprites: Vec<GPUSprite> = vec![
         // FISHERMAN
     GPUSprite {
         screen_region: [100.0, 600.0, 100.0, 100.0],
         sheet_region: fisherman_idle_frames[0],   
     },
-        // NUT
+        // HOOK
+        // start hook out by not being visible (taking up 0 width and height)
     GPUSprite {
-        screen_region: [20.0, 200.0, 55.0, 55.0],
-        sheet_region: [0.0, 0.0, 123.0/sprite_sheet_dimensions.0 as f32, 172.0/sprite_sheet_dimensions.1 as f32],   
+        screen_region: [20.0, 200.0, 0.0, 0.0],
+        sheet_region: hook_frames[0],   
     }
     ];
 
@@ -353,6 +361,16 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         sprite_width: 0.0885608856,
         is_looping: false,
     };
+
+    let hook_animation: Animation = Animation {
+        states: hook_frames,
+        frame_counter: 0,
+        rate: 50,
+        state_number: 0,
+        is_facing_left: false,
+        sprite_width: 100.0,
+        is_looping: true,
+    };
 /* 
     let acorn_animation: Animation = Animation {
         states: [sprites[1].sheet_region].to_vec(),
@@ -369,8 +387,19 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         vec![fisherman_idle_animation, fisherman_walking_animation, fisherman_casting_animation],
         0,
         2.0,
-        true,
+        false,
         0,
+    );
+
+    let mut hook: Char_action = char_action::Char_action::new(
+        sprites[1].screen_region,
+        sprites[1].sheet_region,
+        vec![hook_animation],
+        0,
+        3.0,
+        false,
+        1
+        
     );
 
     /* 
@@ -586,6 +615,19 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 }else if input.is_key_down(winit::event::VirtualKeyCode::Space) {
                     fisherman.set_animation_index(2);
                     gl.is_currently_casted = true;
+
+                    // spawn hook by setting it to the right size and place
+                    sprites[1].screen_region[2] = 100.0;
+                    sprites[1].screen_region[3] = 100.0;
+                    if fisherman.facing_left {
+                        sprites[1].screen_region[0] = sprites[0].screen_region[0] - 38.0;
+                    }
+                    else {
+                        sprites[1].screen_region[0] = sprites[0].screen_region[0] + 38.0;
+                    }
+                    
+                    sprites[1].screen_region[1] = sprites[0].screen_region[1] - 100.0;
+
                 }
                 else if input.is_key_up(winit::event::VirtualKeyCode::Left) || input.is_key_up(winit::event::VirtualKeyCode::Right){
                     if !gl.is_currently_casted{
