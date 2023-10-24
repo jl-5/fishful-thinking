@@ -46,7 +46,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let view: wgpu::TextureView = squirrel_tex.create_view(&wgpu::TextureViewDescriptor::default());
     let sampler = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
 
-    let (tex_bg, mut img_bg) = gpus::WGPU::load_texture("content/forest_background.png", Some("background"), &gpu.device, &gpu.queue ).await.expect("Couldn't load background");
+    let (tex_bg, mut img_bg) = gpus::WGPU::load_texture("fishful_content/Ocean.png", Some("background"), &gpu.device, &gpu.queue ).await.expect("Couldn't load background");
     let view_bg = tex_bg.create_view(&wgpu::TextureViewDescriptor::default());
     let sampler_bg = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
 
