@@ -42,7 +42,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut gpu = gpus::WGPU::new(&window).await;
     let mut gs = game_state::init_game_state();
 
-    let (squirrel_tex, mut squirrel_img) = gpus::WGPU::load_texture("nut_war_content/spritesheet.png", Some("squirrel"), &gpu.device, &gpu.queue).await.expect("Couldn't load squirrel sprite sheet");
+    let (squirrel_tex, mut squirrel_img) = gpus::WGPU::load_texture("fishful_content/fishful_spritesheet.png", Some("spritesheet"), &gpu.device, &gpu.queue).await.expect("Couldn't load squirrel sprite sheet");
     let view: wgpu::TextureView = squirrel_tex.create_view(&wgpu::TextureViewDescriptor::default());
     let sampler = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
 
@@ -256,39 +256,32 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         screen_size: [1024.0, 768.0],
     };
 
-    // total squirrel is 36x133px with 6 frames
-    // one frame of squirrel is 36x22px
-    let sprite_sheet_dimensions = squirrel_img.dimensions();
-    let squirrel_total_w: f32 = 35.0;
-    let squirrel_total_h: f32 = 174.0;
-    let squirrel_frame_w: f32 = 35.0;
-    let squirrel_frame_h: f32 = 22.5;
+    let sprite_sheet_dimensions = (542.0, 356.0);
 
     // frames will be a series of frames 
-    let mut squirrel_sheet_positions: Vec<[f32; 4]> = vec![
+    let mut fisherman_idle_frames: Vec<[f32; 4]> = vec![
 
         // frame 1 sheet position
-        [126.0/162.0, 25.0/174.0, 32.0/162.0, 21.0/174.0],
-
+        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 0.0), 214.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+        
         // frame 2 sheet position
-        [126.0/162.0, 48.0/174.0, 32.0/162.0, 22.0/174.0],
- 
+        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 1.0), 214.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+         
         // frame 3 sheet position
-        [126.0/162.0, 72.0/174.0, 28.0/162.0, 23.0/174.0],
+        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 214.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
 
         // frame 4 sheet position
-        [126.0/162.0, 97.0/174.0, 35.0/162.0, 23.0/174.0],
+        [(((192.0/sprite_sheet_dimensions.0)/4.0) * 3.0), 214.0/sprite_sheet_dimensions.1, (192.0/sprite_sheet_dimensions.0)/4.0, 48.0/sprite_sheet_dimensions.1],
+        /*
 
-        // frame 5 sheet position
-        [126.0/162.0, 122.0/174.0, 33.0/162.0, 22.0/174.0],
 
-    ];
+    */ ];
 
     let mut sprites: Vec<GPUSprite> = vec![
-        // SQUIRREL
+        // FISHERMAN
     GPUSprite {
-        screen_region: [32.0, 32.0, 100.0, 100.0],
-        sheet_region: squirrel_sheet_positions[0],   
+        screen_region: [100.0, 100.0, 200.0, 200.0],
+        sheet_region: fisherman_idle_frames[0],   
     },
         // NUT
     GPUSprite {
@@ -297,8 +290,8 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     }
     ];
 
-    let squirrel_animation: Animation = Animation {
-        states: squirrel_sheet_positions,
+    let fisherman_idle_animation: Animation = Animation {
+        states: fisherman_idle_frames,
         frame_counter: 0,
         rate: 7,
         state_number: 0,
@@ -311,14 +304,16 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         state_number: 0,
     };
 
-    let mut squirrel = char_action::Char_action::new(
+    let mut fisherman = char_action::Char_action::new(
         sprites[0].screen_region,
-        squirrel_animation,
+        vec![fisherman_idle_animation],
+        0,
         2.0,
         true,
         0,
     );
 
+    /* 
     let mut acorn = char_action::Char_action::new(
         sprites[1].screen_region,
         acorn_animation,
@@ -326,6 +321,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         true,
         1,
     );
+    */
 
     let buffer_camera = gpu.device.create_buffer(&wgpu::BufferDescriptor{
         label: None,
@@ -510,54 +506,57 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
             }
             Event::MainEventsCleared => {
 
-                acorn.move_down();
+                //acorn.move_down();
 
                 if input.is_key_down(winit::event::VirtualKeyCode::Left) {
 
-                    squirrel.face_left();
-                    squirrel.walk();
-                    squirrel.animation.tick();
+                    fisherman.face_left();
+                    fisherman.walk();
+                    fisherman.animations[fisherman.current_animation_index].tick();
                     
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Right) {
 
-                    squirrel.face_right();
-                    squirrel.walk();
-                    squirrel.animation.tick();
+                    fisherman.face_right();
+                    fisherman.walk();
+                    fisherman.animations[fisherman.current_animation_index].tick();
 
                 }
                 else if input.is_key_up(winit::event::VirtualKeyCode::Left)  || input.is_key_up(winit::event::VirtualKeyCode::Right){
-                    squirrel.animation.stop();
+                    fisherman.animations[fisherman.current_animation_index].tick();
                 }
 
-                sprites[squirrel.sprites_index].sheet_region = squirrel.animation.get_current_state();
-                sprites[squirrel.sprites_index].screen_region = squirrel.screen_region;
+                // BIG TODO:
+                // find a way to set every sprite in 'sprites' to their appropriate new sheet regions and screen regions
+                sprites[fisherman.sprites_index].sheet_region = fisherman.animations[fisherman.current_animation_index].get_current_state();
+                sprites[fisherman.sprites_index].screen_region = fisherman.screen_region;
 
-                sprites[acorn.sprites_index].screen_region = acorn.screen_region;
+                //sprites[acorn.sprites_index].screen_region = acorn.screen_region;
 
-                let acorn_x: f32 = sprites[acorn.sprites_index].screen_region[0];
-                let acorn_y: f32 = sprites[acorn.sprites_index].screen_region[1];
-                let acorn_width: f32 = sprites[acorn.sprites_index].screen_region[2];
-                let acorn_height: f32 = sprites[acorn.sprites_index].screen_region[3];
+                //let acorn_x: f32 = sprites[acorn.sprites_index].screen_region[0];
+                //let acorn_y: f32 = sprites[acorn.sprites_index].screen_region[1];
+                //let acorn_width: f32 = sprites[acorn.sprites_index].screen_region[2];
+                //let acorn_height: f32 = sprites[acorn.sprites_index].screen_region[3];
 
-                let mut squirrel_x: f32 = sprites[squirrel.sprites_index].screen_region[0];
-                let squirrel_y: f32 = sprites[squirrel.sprites_index].screen_region[1];
-                let mut squirrel_width: f32 = sprites[squirrel.sprites_index].screen_region[2];
-                let squirrel_height: f32 = sprites[squirrel.sprites_index].screen_region[3];
+                let mut squirrel_x: f32 = sprites[fisherman.sprites_index].screen_region[0];
+                let squirrel_y: f32 = sprites[fisherman.sprites_index].screen_region[1];
+                let mut squirrel_width: f32 = sprites[fisherman.sprites_index].screen_region[2];
+                let squirrel_height: f32 = sprites[fisherman.sprites_index].screen_region[3];
 
                 // adjusting for right facing squirrel
-                if squirrel.facing_right {
+                if fisherman.facing_right {
                     squirrel_x += squirrel_width;
                     squirrel_width *= -1.0;
                 }
 
+                /*
                 // Check for collisions
                 if (acorn_x + acorn_width > squirrel_x) && (acorn_x < squirrel_x + squirrel_width)
                     && (acorn_y - acorn_height < squirrel_y) && (acorn_y > squirrel_y - squirrel_height) {
                     // Collision detected, handle it here
                     nut_count += 1;
-                    acorn.speed += 0.1;
-                    acorn.reset_y();
+                    //acorn.speed += 0.1;
+                    //acorn.reset_y();
 
                     if !gs.score_changing{
                         gs.score += 1;
@@ -569,7 +568,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                 }
                 else{gs.score_changing = false;}
-
+                */
                 window.request_redraw();
             }
             _ => {}
