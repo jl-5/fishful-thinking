@@ -723,6 +723,10 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                     gs.game_screen = 2;
                 }
 
+                if input.is_key_down(winit::event::VirtualKeyCode::A) {
+                    gs.game_screen = 0;
+                }
+
                 else if input.is_key_down(winit::event::VirtualKeyCode::Left) {
                     if !gs.is_currently_casted{
                         fisherman.set_animation_index(1);
