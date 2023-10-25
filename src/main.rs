@@ -725,6 +725,10 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                 if input.is_key_down(winit::event::VirtualKeyCode::A) {
                     gs.game_screen = 0;
+                    gs.score = 0;
+                    gs.is_currently_casted = false;
+                    hook.screen_region = [20.0, 200.0, 0.0, 0.0];
+                    fisherman.screen_region = [100.0, 600.0, 100.0, 100.0];
                 }
 
                 else if input.is_key_down(winit::event::VirtualKeyCode::Left) {
