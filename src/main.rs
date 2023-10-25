@@ -13,7 +13,6 @@ use std::path::Path;
 use imageproc::rect::Rect;
 use rusttype::{Font, Scale};
 mod game_state;
-mod game_logic;
 mod char_action;
 mod gpus;
 mod input;
@@ -27,8 +26,9 @@ use glyphon::{
 use wgpu::{
     CompositeAlphaMode, MultisampleState, 
 };
+// mod title;
 
-use crate::{game_logic::GameManager, char_action::Char_action};
+use crate::{char_action::Char_action, game_state::GameState};
 
 #[repr(C)]
 #[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
@@ -40,16 +40,23 @@ struct GPUSprite {
 
 async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut gpu = gpus::WGPU::new(&window).await;
-    let mut gs = game_state::init_game_state();
-    let mut gl: GameManager = game_logic::init_game_manager();
+    let mut gs = game_state::GameState::init_game_state();
 
-    let (squirrel_tex, mut squirrel_img) = gpus::WGPU::load_texture("fishful_content/fishful_spritesheet.png", Some("spritesheet"), &gpu.device, &gpu.queue).await.expect("Couldn't load squirrel sprite sheet");
-    let view: wgpu::TextureView = squirrel_tex.create_view(&wgpu::TextureViewDescriptor::default());
+    let (fisherman_tex, mut fisherman_img) = gpus::WGPU::load_texture("fishful_content/fishful_spritesheet.png", Some("spritesheet"), &gpu.device, &gpu.queue).await.expect("Couldn't load squirrel sprite sheet");
+    let view: wgpu::TextureView = fisherman_tex.create_view(&wgpu::TextureViewDescriptor::default());
     let sampler = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
 
     let (tex_bg, mut img_bg) = gpus::WGPU::load_texture("fishful_content/background.png", Some("background"), &gpu.device, &gpu.queue ).await.expect("Couldn't load background");
     let view_bg = tex_bg.create_view(&wgpu::TextureViewDescriptor::default());
     let sampler_bg = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
+
+    let (tex_title, mut img_title) = gpus::WGPU::load_texture("fishful_content/title.png", Some("background"), &gpu.device, &gpu.queue ).await.expect("Couldn't load background");
+    let view_title = tex_title.create_view(&wgpu::TextureViewDescriptor::default());
+    let sampler_title = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
+
+    let (tex_end_game, mut img_end_game) = gpus::WGPU::load_texture("fishful_content/end_game.png", Some("background"), &gpu.device, &gpu.queue ).await.expect("Couldn't load background");
+    let view_end_game = tex_end_game.create_view(&wgpu::TextureViewDescriptor::default());
+    let sampler_end_game = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
 
     // Set up text renderer
     let mut font_system = FontSystem::new();
@@ -190,6 +197,38 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
             wgpu::BindGroupEntry {
                 binding: 1,
                 resource: wgpu::BindingResource::Sampler(&sampler_bg),
+            },
+        ],
+    });
+
+    let tex_title_bind_group = gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: None,
+        layout: &texture_bind_group_layout,
+        entries: &[
+            // One for the texture, one for the sampler
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view_title),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: wgpu::BindingResource::Sampler(&sampler_title),
+            },
+        ],
+    });
+
+    let tex_end_bind_group = gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: None,
+        layout: &texture_bind_group_layout,
+        entries: &[
+            // One for the texture, one for the sampler
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view_end_game),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: wgpu::BindingResource::Sampler(&sampler_end_game),
             },
         ],
     });
@@ -535,26 +574,50 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                         })],
                         depth_stencil_attachment: None,
                     });
-                    rpass.set_pipeline(&render_pipeline_bg);
-                    // Attach the bind group for group 0
-                    rpass.set_bind_group(0, &tex_bg_bind_group, &[]);
-                    // Now draw two triangles!
-                    rpass.draw(0..6, 0..2);
+                    
+                    if gs.game_screen == 0 {
+                        rpass.set_pipeline(&render_pipeline_bg);
+                        // Attach the bind group for group 0
+                        rpass.set_bind_group(0, &tex_title_bind_group, &[]);
+                        // Now draw two triangles!
+                        rpass.draw(0..6, 0..2);
 
-                    // Now we begin a render pass.  The descriptor tells WGPU that
-                    // we want to draw onto our swapchain texture view (that's where the colors will go)
-                    // and that there's no depth buffer or stencil buffer.
+                        // Now we begin a render pass.  The descriptor tells WGPU that
+                        // we want to draw onto our swapchain texture view (that's where the colors will go)
+                        // and that there's no depth buffer or stencil buffer.
+                    }
 
-                    text_renderer.render(&atlas, &mut rpass).unwrap();
+                    else if gs.game_screen == 1 {
+                        rpass.set_pipeline(&render_pipeline_bg);
+                        // Attach the bind group for group 0
+                        rpass.set_bind_group(0, &tex_bg_bind_group, &[]);
+                        // Now draw two triangles!
+                        rpass.draw(0..6, 0..2);
 
-                    rpass.set_pipeline(&render_pipeline);
-                    rpass.set_bind_group(0, &sprite_bind_group, &[]);
-                    rpass.set_bind_group(1, &texture_bind_group, &[]);
-                    // // draw two triangles per sprite, and sprites-many sprites.
-                    // // this uses instanced drawing, but it would also be okay
-                    // // to draw 6 * sprites.len() vertices and use modular arithmetic
-                    // // to figure out which sprite we're drawing, instead of the instance index.
-                    rpass.draw(0..6, 0..(sprites.len() as u32));
+                        // Now we begin a render pass.  The descriptor tells WGPU that
+                        // we want to draw onto our swapchain texture view (that's where the colors will go)
+                        // and that there's no depth buffer or stencil buffer.
+
+                        text_renderer.render(&atlas, &mut rpass).unwrap();
+
+                        rpass.set_pipeline(&render_pipeline);
+                        rpass.set_bind_group(0, &sprite_bind_group, &[]);
+                        rpass.set_bind_group(1, &texture_bind_group, &[]);
+                        // // draw two triangles per sprite, and sprites-many sprites.
+                        // // this uses instanced drawing, but it would also be okay
+                        // // to draw 6 * sprites.len() vertices and use modular arithmetic
+                        // // to figure out which sprite we're drawing, instead of the instance index.
+                        rpass.draw(0..6, 0..(sprites.len() as u32));
+                    }
+
+                    else if gs.game_screen == 2 {
+                        rpass.set_pipeline(&render_pipeline_bg);
+                        // Attach the bind group for group 0
+                        rpass.set_bind_group(0, &tex_end_bind_group, &[]);
+                        // Now draw two triangles!
+                        rpass.draw(0..6, 0..2);
+                    }
+
             }
 
                 // Once the commands have been scheduled, we send them over to the GPU via the queue.
@@ -597,33 +660,41 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                 //acorn.move_down();
 
-                if input.is_key_down(winit::event::VirtualKeyCode::Left) {
-                    if !gl.is_currently_casted{
+                if input.is_key_down(winit::event::VirtualKeyCode::Return) {
+                    gs.game_screen = 1;
+                }
+
+                if input.is_key_down(winit::event::VirtualKeyCode::E) {
+                    gs.game_screen = 2;
+                }
+
+                else if input.is_key_down(winit::event::VirtualKeyCode::Left) {
+                    if !gs.is_currently_casted{
                         fisherman.set_animation_index(1);
                         fisherman.face_left();
                         fisherman.walk();
                     }
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Right) {
-                    if !gl.is_currently_casted{
+                    if !gs.is_currently_casted{
                         fisherman.set_animation_index(1);
                         fisherman.face_right();
                         fisherman.walk();
                     }
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Down) {
-                    if gl.is_currently_casted{
+                    if gs.is_currently_casted{
                         hook.travel_down();
                     }
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Up) {
-                    if gl.is_currently_casted{
+                    if gs.is_currently_casted{
                         hook.travel_up();
                     }
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Space) {
                     fisherman.set_animation_index(2);
-                    gl.is_currently_casted = true;
+                    gs.is_currently_casted = true;
 
                     // spawn hook by setting it to the right size on the screen
                     hook.screen_region[2] = 100.0;
@@ -640,7 +711,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                 }
                 else if input.is_key_up(winit::event::VirtualKeyCode::Left) || input.is_key_up(winit::event::VirtualKeyCode::Right){
-                    if !gl.is_currently_casted{
+                    if !gs.is_currently_casted{
                         fisherman.set_animation_index(0);
                     }
                     
