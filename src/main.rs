@@ -356,7 +356,14 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         // frame 1 sheet position
         [291.0/sprite_sheet_dimensions.0, 255.0/sprite_sheet_dimensions.1, 100.0/sprite_sheet_dimensions.0, 100.0/sprite_sheet_dimensions.1],
     ];
+    let mut fish_offset = 0.0;
+    let mut fish_frames: Vec<[f32; 4]> = vec![
+        //fish 1 positions
+        [(((48.0/sprite_sheet_dimensions.0)/4.0) * 0.0), 1.0/sprite_sheet_dimensions.1, ((48.0/sprite_sheet_dimensions.0)/4.0) - (fish_offset/sprite_sheet_dimensions.0), 6.0/sprite_sheet_dimensions.1],
 
+        [(((48.0/sprite_sheet_dimensions.0)/4.0) * 1.0), 1.0/sprite_sheet_dimensions.1, ((48.0/sprite_sheet_dimensions.0)/4.0) - (fish_offset/sprite_sheet_dimensions.0), 6.0/sprite_sheet_dimensions.1],
+
+    ];
     let mut sprites: Vec<GPUSprite> = vec![
         // FISHERMAN
     GPUSprite {
@@ -368,7 +375,18 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     GPUSprite {
         screen_region: [20.0, 200.0, 0.0, 0.0],
         sheet_region: hook_frames[0],   
-    }
+    },
+
+    GPUSprite {
+        screen_region: [20.0, 20.0, 50.0, 30.0],
+        sheet_region: fish_frames[0],
+    },
+
+    GPUSprite {
+        screen_region: [20.0, 40.0, 50.0, 30.0],
+        sheet_region: fish_frames[1],
+    },
+
     ];
 
     let fisherman_idle_animation: Animation = Animation {
@@ -410,6 +428,16 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         sprite_width: 100.0,
         is_looping: true,
     };
+
+    let fish_animation: Animation = Animation {
+        states: fish_frames,
+        frame_counter: 0,
+        rate: 50,
+        state_number: 0,
+        is_facing_left: false,
+        sprite_width: sprites[2].sheet_region[2],
+        is_looping: true,
+    };
 /* 
     let acorn_animation: Animation = Animation {
         states: [sprites[1].sheet_region].to_vec(),
@@ -440,6 +468,18 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         1
         
     );
+
+    let mut fish: Char_action = char_action::Char_action::new(
+        sprites[2].screen_region,
+        sprites[2].sheet_region,
+        vec![fish_animation],
+        0,
+        3.0,
+        false,
+        2
+        
+    );
+    
 
     /* 
     let mut acorn = char_action::Char_action::new(
@@ -659,6 +699,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
             Event::MainEventsCleared => {
 
                 //acorn.move_down();
+                fish.move_right();
 
                 if input.is_key_down(winit::event::VirtualKeyCode::Return) {
                     gs.game_screen = 1;
@@ -725,6 +766,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 sprites[fisherman.sprites_index].sheet_region = fisherman.get_current_animation_state();
                 sprites[fisherman.sprites_index].screen_region = fisherman.screen_region;
                 sprites[hook.sprites_index].screen_region = hook.screen_region;
+                sprites[fish.sprites_index].screen_region = fish.screen_region;
 
                 //sprites[acorn.sprites_index].screen_region = acorn.screen_region;
 
