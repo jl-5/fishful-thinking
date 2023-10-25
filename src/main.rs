@@ -356,17 +356,16 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         // frame 1 sheet position
         [291.0/sprite_sheet_dimensions.0, 255.0/sprite_sheet_dimensions.1, 100.0/sprite_sheet_dimensions.0, 100.0/sprite_sheet_dimensions.1],
     ];
-    let mut fish_offset = 0.0;
     let mut fish_frames: Vec<[f32; 4]> = vec![
         //fish 1 positions
-        [(((48.0/sprite_sheet_dimensions.0)/4.0) * 0.0), 1.0/sprite_sheet_dimensions.1, ((48.0/sprite_sheet_dimensions.0)/4.0) - (fish_offset/sprite_sheet_dimensions.0), 6.0/sprite_sheet_dimensions.1],
+        [0.0/sprite_sheet_dimensions.0, 1.0/sprite_sheet_dimensions.1, 12.0/sprite_sheet_dimensions.0, 6.0/sprite_sheet_dimensions.1],
 
-        [(((48.0/sprite_sheet_dimensions.0)/4.0) * 1.0), 1.0/sprite_sheet_dimensions.1, ((48.0/sprite_sheet_dimensions.0)/4.0) - (fish_offset/sprite_sheet_dimensions.0), 6.0/sprite_sheet_dimensions.1],
+        [12.0/sprite_sheet_dimensions.0, 1.0/sprite_sheet_dimensions.1, 12.0/sprite_sheet_dimensions.0, 6.0/sprite_sheet_dimensions.1],
 
         //fish 2 positions
         [26.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
 
-        [26.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
+        [43.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
 
     ];
     let mut sprites: Vec<GPUSprite> = vec![
@@ -386,17 +385,17 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         screen_region: [20.0, 20.0, 50.0, 30.0],
         sheet_region: fish_frames[0],
     },
-        // FISHB
+        // FISH1B
     GPUSprite {
         screen_region: [20.0, 40.0, 50.0, 30.0],
         sheet_region: fish_frames[1],
     },
-
+        // FISH2A
     GPUSprite {
         screen_region: [20.0, 60.0, 50.0, 30.0],
         sheet_region: fish_frames[2],
     },
-
+        // FISH2B
     GPUSprite {
         screen_region: [20.0, 80.0, 50.0, 30.0],
         sheet_region: fish_frames[3],
