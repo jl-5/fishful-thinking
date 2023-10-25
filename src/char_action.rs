@@ -56,6 +56,15 @@ impl Char_action {
             self.screen_region[0] = rand::thread_rng().gen_range(0..1025) as f32;
         }
     }
+
+    pub fn travel_down(&mut self){
+        self.screen_region[1] -= self.speed;
+    }
+
+    pub fn travel_up(&mut self){
+        self.screen_region[1] += self.speed;
+    }
+
     pub fn move_right(&mut self) {
         self.screen_region[0] -= self.speed;
 

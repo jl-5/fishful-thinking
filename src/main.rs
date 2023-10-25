@@ -610,23 +610,33 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                         fisherman.face_right();
                         fisherman.walk();
                     }
-
-
-                }else if input.is_key_down(winit::event::VirtualKeyCode::Space) {
+                }
+                else if input.is_key_down(winit::event::VirtualKeyCode::Down) {
+                    if gl.is_currently_casted{
+                        hook.travel_down();
+                    }
+                }
+                else if input.is_key_down(winit::event::VirtualKeyCode::Up) {
+                    if gl.is_currently_casted{
+                        hook.travel_up();
+                    }
+                }
+                else if input.is_key_down(winit::event::VirtualKeyCode::Space) {
                     fisherman.set_animation_index(2);
                     gl.is_currently_casted = true;
 
-                    // spawn hook by setting it to the right size and place
-                    sprites[1].screen_region[2] = 100.0;
-                    sprites[1].screen_region[3] = 100.0;
+                    // spawn hook by setting it to the right size on the screen
+                    hook.screen_region[2] = 100.0;
+                    hook.screen_region[3] = 100.0;
+                    // set the hook to the correct x value depending on which way the fisherman is facing
                     if fisherman.facing_left {
-                        sprites[1].screen_region[0] = sprites[0].screen_region[0] - 38.0;
+                        hook.screen_region[0] = fisherman.screen_region[0] - 38.0;
                     }
                     else {
-                        sprites[1].screen_region[0] = sprites[0].screen_region[0] + 38.0;
+                        hook.screen_region[0] = fisherman.screen_region[0] + 38.0;
                     }
                     
-                    sprites[1].screen_region[1] = sprites[0].screen_region[1] - 100.0;
+                    hook.screen_region[1] = fisherman.screen_region[1] - 100.0;
 
                 }
                 else if input.is_key_up(winit::event::VirtualKeyCode::Left) || input.is_key_up(winit::event::VirtualKeyCode::Right){
@@ -643,6 +653,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 fisherman.animations[fisherman.current_animation_index].tick();
                 sprites[fisherman.sprites_index].sheet_region = fisherman.get_current_animation_state();
                 sprites[fisherman.sprites_index].screen_region = fisherman.screen_region;
+                sprites[hook.sprites_index].screen_region = hook.screen_region;
 
                 //sprites[acorn.sprites_index].screen_region = acorn.screen_region;
 
