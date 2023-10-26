@@ -285,9 +285,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     }
     let camera = GPUCamera {
         screen_pos: [0.0, 0.0],
-        // Consider using config.width and config.height instead,
-        // it's up to you whether you want the window size to change what's visible in the game
-        // or scale it up and down
         screen_size: [1024.0, 768.0],
     };
 
@@ -752,6 +749,11 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Up) {
                     if gs.is_currently_casted{
+                        if hook.screen_region[1] == 500.0 {
+                            hook.hide();
+                            gs.is_currently_casted = false;
+                            fisherman.set_animation_index(0)
+                        }
                         hook.travel_up();
                     }
                 }

@@ -58,11 +58,25 @@ impl Char_action {
     }
 
     pub fn travel_down(&mut self){
-        self.screen_region[1] -= self.speed;
+
+        // only let it travel down if it's above y coordinate 0.0
+        if self.screen_region[1] > 0.0{
+            self.screen_region[1] -= self.speed;
+        }
+        
     }
 
     pub fn travel_up(&mut self){
-        self.screen_region[1] += self.speed;
+
+        if self.screen_region[1] < 500.0{
+            self.screen_region[1] += self.speed;
+        }
+        
+    }
+
+    pub fn hide(&mut self){
+        self.screen_region[0] = 0.0;
+        self.screen_region[1] = 0.0;
     }
 
     pub fn move_right(&mut self) {
