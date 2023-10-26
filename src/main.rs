@@ -884,7 +884,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 
                 // Check for collisions
                 if (hook_x + hook_width > fish_x) && (hook_x < fish_x + fish_width)
-                    && (hook_y - hook_height < fish_y) && (hook_y > fish_y - fish_height) {
+                    && (hook_y - hook_height + 70.0 < fish_y) && (hook_y + 38.0 > fish_y - fish_height) {
                     // Collision detected, handle it here
                     fish.reset_x();
 
