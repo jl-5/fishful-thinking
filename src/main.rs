@@ -372,6 +372,14 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         // frame 1 sheet position
         [291.0/sprite_sheet_dimensions.0, 255.0/sprite_sheet_dimensions.1, 100.0/sprite_sheet_dimensions.0, 100.0/sprite_sheet_dimensions.1],
     ];
+
+    // line is just one frame
+    let mut line_frames: Vec<[f32; 4]> = vec![
+
+        // frame 1 sheet position
+        [381.0/sprite_sheet_dimensions.0, 240.0/sprite_sheet_dimensions.1, 10.0/sprite_sheet_dimensions.0, 8.0/sprite_sheet_dimensions.1],
+    ];
+
     let mut fish_frames: Vec<[f32; 4]> = vec![
         //fish 1 positions
         [0.0/sprite_sheet_dimensions.0, 1.0/sprite_sheet_dimensions.1, 12.0/sprite_sheet_dimensions.0, 6.0/sprite_sheet_dimensions.1],
@@ -417,6 +425,13 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         sheet_region: fish_frames[3],
     },
 
+    // FISHING LINE
+    // have line also not be visible at start
+    GPUSprite {
+        screen_region: [100.0, 540.0, 0.0, 0.0],
+        sheet_region: line_frames[0],
+    },
+
     ];
 
     let fisherman_idle_animation: Animation = Animation {
@@ -427,7 +442,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_facing_left: false,
         sprite_width: sprites[0].sheet_region[2],
         is_looping: true,
-        is_done: false,
+        is_done: true,
     };
 
     let fisherman_walking_animation: Animation = Animation {
@@ -438,7 +453,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_facing_left: false,
         sprite_width: sprites[0].sheet_region[2],
         is_looping: true,
-        is_done: false,
+        is_done: true,
     };
 
     let fisherman_casting_animation: Animation = Animation {
@@ -484,6 +499,17 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_looping: true,
         is_done: false,
     };
+
+    let line_animation: Animation = Animation {
+        states: line_frames,
+        frame_counter: 0,
+        rate: 50,
+        state_number: 0,
+        is_facing_left: false,
+        sprite_width: sprites[6].sheet_region[2],
+        is_looping: true,
+        is_done: false,
+    };
 /* 
     let acorn_animation: Animation = Animation {
         states: [sprites[1].sheet_region].to_vec(),
@@ -512,6 +538,17 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         3.0,
         false,
         1
+        
+    );
+
+    let mut line: Char_action = char_action::Char_action::new(
+        sprites[6].screen_region,
+        sprites[6].sheet_region,
+        vec![line_animation],
+        0,
+        3.0,
+        false,
+        6
         
     );
 
@@ -689,10 +726,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                         rpass.set_pipeline(&render_pipeline);
                         rpass.set_bind_group(0, &sprite_bind_group, &[]);
                         rpass.set_bind_group(1, &texture_bind_group, &[]);
-                        // // draw two triangles per sprite, and sprites-many sprites.
-                        // // this uses instanced drawing, but it would also be okay
-                        // // to draw 6 * sprites.len() vertices and use modular arithmetic
-                        // // to figure out which sprite we're drawing, instead of the instance index.
                         rpass.draw(0..6, 0..(sprites.len() as u32));
                     }
 
@@ -788,38 +821,53 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 else if input.is_key_down(winit::event::VirtualKeyCode::Down) {
                     if gs.is_currently_casted{
                         hook.travel_down();
+                        line.scale_elongate(hook.screen_region[1], 250.0);
                     }
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Up) {
                     if gs.is_currently_casted{
                         if hook.screen_region[1] == 500.0 {
                             hook.hide();
+                            line.hide();
                             gs.is_currently_casted = false;
                             fisherman.set_animation_index(3);
+                            fisherman.reset_current_animation();
                         }
                         hook.travel_up();
+                        line.scale_elongate(hook.screen_region[1], 250.0);
                     }
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Space) {
-                    fisherman.set_animation_index(2);
-                    gs.is_currently_casted = true;
+                    if !gs.is_currently_casted{
+                        fisherman.set_animation_index(2);
+                        gs.is_currently_casted = true;
 
-                    // spawn hook by setting it to the right size on the screen
-                    hook.screen_region[2] = 100.0;
-                    hook.screen_region[3] = 100.0;
-                    // set the hook to the correct x value depending on which way the fisherman is facing
-                    if fisherman.facing_left {
-                        hook.screen_region[0] = fisherman.screen_region[0] - 38.0;
-                    }
-                    else {
-                        hook.screen_region[0] = fisherman.screen_region[0] + 38.0;
+                        // spawn hook by setting it to the right size on the screen
+                        hook.screen_region[2] = 100.0;
+                        hook.screen_region[3] = 100.0;
+                        // set the hook to the correct x value depending on which way the fisherman is facing
+                        // hardcoded the offset bc of time
+                        if fisherman.facing_left {
+                            hook.screen_region[0] = fisherman.screen_region[0] - 38.0;
+                            line.screen_region[0] = fisherman.screen_region[0] + 12.0;
+                        }
+                        else {
+                            hook.screen_region[0] = fisherman.screen_region[0] + 38.0;
+                            line.screen_region[0] = fisherman.screen_region[0] + 90.0;
+                        }
+                        
+                        hook.screen_region[1] = fisherman.screen_region[1] - 100.0;
+
+                        // spawn the fishing line
+                        line.screen_region[2] = 10.0;
+                        line.screen_region[3] = 0.0;
+                        line.screen_region[1] = 600.0;
                     }
                     
-                    hook.screen_region[1] = fisherman.screen_region[1] - 100.0;
 
                 }
                 else if input.is_key_up(winit::event::VirtualKeyCode::Left) || input.is_key_up(winit::event::VirtualKeyCode::Right){
-                    if !gs.is_currently_casted{
+                    if !gs.is_currently_casted && fisherman.animations[fisherman.current_animation_index].is_done {
                         fisherman.set_animation_index(0);
                     }
                     
@@ -834,6 +882,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 sprites[fisherman.sprites_index].screen_region = fisherman.screen_region;
                 sprites[hook.sprites_index].screen_region = hook.screen_region;
                 sprites[fish.sprites_index].screen_region = fish.screen_region;
+                sprites[line.sprites_index].screen_region = line.screen_region;
 
                 //sprites[acorn.sprites_index].screen_region = acorn.screen_region;
 

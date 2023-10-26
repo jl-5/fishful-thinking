@@ -30,6 +30,14 @@ impl Animation {
                     self.state_number = 0;
                 }
             }
+            else {
+                if self.state_number >= self.states.len() as usize - 1 {
+                    self.is_done = true;
+                }
+                else {
+                    self.is_done = false;
+                }
+            }
 
             self.frame_counter = 0;
         }
@@ -70,5 +78,10 @@ impl Animation {
 
     pub fn apply_face_right(&mut self){
         self.is_facing_left = false;
+    }
+
+    pub fn restart_animation(&mut self){
+        self.frame_counter = 0;
+        self.state_number = 0;
     }
 }

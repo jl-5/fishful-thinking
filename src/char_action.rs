@@ -97,6 +97,12 @@ impl Char_action {
         self.screen_region[0] = rand::thread_rng().gen_range(0..1025) as f32;
     }
 
+    pub fn scale_elongate(&mut self, desired_height: f32, offset: f32) {
+        self.screen_region[3] = -(768.0 - desired_height) + offset;
+        //self.screen_region[2] = self.screen_region[3] * 0.5;
+        
+    }
+
     pub fn set_animation_index(&mut self, index: usize) {
         self.current_animation_index = index;
     }
