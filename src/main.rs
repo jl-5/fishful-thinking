@@ -50,13 +50,17 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let view_bg = tex_bg.create_view(&wgpu::TextureViewDescriptor::default());
     let sampler_bg = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
 
-    let (tex_title, mut img_title) = gpus::WGPU::load_texture("fishful_content/title.png", Some("background"), &gpu.device, &gpu.queue ).await.expect("Couldn't load background");
+    let (tex_title, mut img_title) = gpus::WGPU::load_texture("fishful_content/title.png", Some("title"), &gpu.device, &gpu.queue ).await.expect("Couldn't load title");
     let view_title = tex_title.create_view(&wgpu::TextureViewDescriptor::default());
     let sampler_title = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
 
-    let (tex_end_game, mut img_end_game) = gpus::WGPU::load_texture("fishful_content/end_game.png", Some("background"), &gpu.device, &gpu.queue ).await.expect("Couldn't load background");
+    let (tex_end_game, mut img_end_game) = gpus::WGPU::load_texture("fishful_content/end_game.png", Some("end screen"), &gpu.device, &gpu.queue ).await.expect("Couldn't load end screen");
     let view_end_game = tex_end_game.create_view(&wgpu::TextureViewDescriptor::default());
     let sampler_end_game = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
+
+    let (tex_instructions, mut img_instructions) = gpus::WGPU::load_texture("fishful_content/instructions.png", Some("instructions"), &gpu.device, &gpu.queue ).await.expect("Couldn't load instructions");
+    let view_instructions = tex_instructions.create_view(&wgpu::TextureViewDescriptor::default());
+    let sampler_instructions = gpu.device.create_sampler(&wgpu::SamplerDescriptor::default());
 
     // Set up text renderer
     let mut font_system = FontSystem::new();
@@ -229,6 +233,22 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
             wgpu::BindGroupEntry {
                 binding: 1,
                 resource: wgpu::BindingResource::Sampler(&sampler_end_game),
+            },
+        ],
+    });
+
+    let tex_instructions_bind_group = gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: None,
+        layout: &texture_bind_group_layout,
+        entries: &[
+            // One for the texture, one for the sampler
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view_instructions),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: wgpu::BindingResource::Sampler(&sampler_instructions),
             },
         ],
     });
@@ -709,6 +729,14 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                     else if gs.game_screen == 1 {
                         rpass.set_pipeline(&render_pipeline_bg);
                         // Attach the bind group for group 0
+                        rpass.set_bind_group(0, &tex_instructions_bind_group, &[]);
+                        // Now draw two triangles!
+                        rpass.draw(0..6, 0..2);
+                    }
+
+                    else if gs.game_screen == 2 {
+                        rpass.set_pipeline(&render_pipeline_bg);
+                        // Attach the bind group for group 0
                         rpass.set_bind_group(0, &tex_bg_bind_group, &[]);
                         // Now draw two triangles!
                         rpass.draw(0..6, 0..2);
@@ -725,7 +753,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                         rpass.draw(0..6, 0..(sprites.len() as u32));
                     }
 
-                    else if gs.game_screen == 2 {
+                    else if gs.game_screen == 3 {
                         rpass.set_pipeline(&render_pipeline_bg);
                         // Attach the bind group for group 0
                         rpass.set_bind_group(0, &tex_end_bind_group, &[]);
@@ -773,11 +801,11 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
             }
             Event::MainEventsCleared => {
 
-                if gs.game_screen == 1 {
+                if gs.game_screen == 2 {
                     let mut new_now = Instant::now();
                     if new_now.duration_since(start) >= Duration::from_secs(time_limit)
                     {
-                        gs.game_screen = 2;
+                        gs.game_screen = 3;
                     }
                     // println!(
                     //     ">You have {:?} seconds left!!!<",
@@ -789,15 +817,19 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 large_fish.deep_move_right();
 
                 if input.is_key_down(winit::event::VirtualKeyCode::Return) && gs.game_screen==0 {
-                    start = Instant::now();
                     gs.game_screen = 1;
                 }
 
-                if input.is_key_down(winit::event::VirtualKeyCode::E) && gs.game_screen==1 {
+                else if input.is_key_down(winit::event::VirtualKeyCode::P) && gs.game_screen==1 {
+                    start = Instant::now();
                     gs.game_screen = 2;
                 }
 
-                if input.is_key_down(winit::event::VirtualKeyCode::A) && gs.game_screen==2 {
+                else if input.is_key_down(winit::event::VirtualKeyCode::E) && gs.game_screen==2 {
+                    gs.game_screen = 3;
+                }
+
+                else if input.is_key_down(winit::event::VirtualKeyCode::A) && gs.game_screen==3 {
                     gs.game_screen = 0;
                     gs.score = 0;
                     gs.is_currently_casted = false;
