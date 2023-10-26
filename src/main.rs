@@ -26,7 +26,7 @@ use glyphon::{
 use wgpu::{
     CompositeAlphaMode, MultisampleState, 
 };
-// mod title;
+use std::time::{Duration, Instant};
 
 use crate::{char_action::Char_action, game_state::GameState};
 
@@ -276,6 +276,9 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut color = image::Rgba([255,0,0,255]);
     let mut brush_size = 10_i32;
     let (img_bg_w, img_bg_h) = img_bg.dimensions();
+    let mut start = Instant::now();
+    let time_limit = 90;
+
 
     #[repr(C)]
     #[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
@@ -741,18 +744,26 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
             }
             Event::MainEventsCleared => {
 
-                //acorn.move_down();
+                if gs.game_screen == 1 {
+                    let mut new_now = Instant::now();
+                    if new_now.duration_since(start) >= Duration::from_secs(time_limit)
+                    {
+                        gs.game_screen = 2;
+                    }
+                }
+
                 fish.move_right();
 
-                if input.is_key_down(winit::event::VirtualKeyCode::Return) {
+                if input.is_key_down(winit::event::VirtualKeyCode::Return) && gs.game_screen==0 {
+                    start = Instant::now();
                     gs.game_screen = 1;
                 }
 
-                if input.is_key_down(winit::event::VirtualKeyCode::E) {
+                if input.is_key_down(winit::event::VirtualKeyCode::E) && gs.game_screen==1 {
                     gs.game_screen = 2;
                 }
 
-                if input.is_key_down(winit::event::VirtualKeyCode::A) {
+                if input.is_key_down(winit::event::VirtualKeyCode::A) && gs.game_screen==2 {
                     gs.game_screen = 0;
                     gs.score = 0;
                     gs.is_currently_casted = false;
