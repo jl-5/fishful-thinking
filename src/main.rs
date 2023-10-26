@@ -389,6 +389,11 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         // [26.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
         // [43.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
     ];
+    let mut large_fish_frames: Vec<[f32; 4]> = vec![
+        // //fish 2 positions
+        [26.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
+        [43.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
+    ];
     let mut sprites: Vec<GPUSprite> = vec![
         // FISHERMAN
     GPUSprite {
@@ -417,11 +422,11 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     //     screen_region: [20.0, 40.0, 50.0, 30.0],
     //     sheet_region: fish_frames[1],
     // },
-    //     // FISH2A
-    // GPUSprite {
-    //     screen_region: [20.0, 60.0, 50.0, 30.0],
-    //     sheet_region: fish_frames[2],
-    // },
+        // FISH2A
+    GPUSprite {
+        screen_region: [20.0, 80.0, 50.0, 30.0],
+        sheet_region: large_fish_frames[0],
+    },
     //     // FISH2B
     // GPUSprite {
     //     screen_region: [20.0, 80.0, 50.0, 30.0],
@@ -498,10 +503,21 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let fish_animation: Animation = Animation {
         states: fish_frames,
         frame_counter: 0,
-        rate: 6,
+        rate: 12,
         state_number: 0,
         is_facing_left: false,
         sprite_width: sprites[3].sheet_region[2],
+        is_looping: true,
+        is_done: false,
+    };
+
+    let large_fish_animation: Animation = Animation {
+        states: large_fish_frames,
+        frame_counter: 0,
+        rate: 12,
+        state_number: 0,
+        is_facing_left: false,
+        sprite_width: sprites[4].sheet_region[2],
         is_looping: true,
         is_done: false,
     };
@@ -524,7 +540,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         3.0,
         false,
         1
-        
     );
 
     let mut line: Char_action = char_action::Char_action::new(
@@ -535,7 +550,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         3.0,
         false,
         2
-        
     );
 
     let mut fish: Char_action = char_action::Char_action::new(
@@ -546,7 +560,16 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         2.0,
         false,
         3
-        
+    );
+
+    let mut large_fish: Char_action = char_action::Char_action::new(
+        sprites[4].screen_region,
+        sprites[4].sheet_region,
+        vec![large_fish_animation],
+        0,
+        3.5,
+        false,
+        4
     );
     
     let buffer_camera = gpu.device.create_buffer(&wgpu::BufferDescriptor{
@@ -763,6 +786,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 }
 
                 fish.move_right();
+                large_fish.deep_move_right();
 
                 if input.is_key_down(winit::event::VirtualKeyCode::Return) && gs.game_screen==0 {
                     start = Instant::now();
@@ -861,11 +885,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 sprites[hook.sprites_index].screen_region = hook.screen_region;
                 sprites[line.sprites_index].screen_region = line.screen_region;
                 sprites[fish.sprites_index].screen_region = fish.screen_region;
-
-                //let acorn_x: f32 = sprites[acorn.sprites_index].screen_region[0];
-                //let acorn_y: f32 = sprites[acorn.sprites_index].screen_region[1];
-                //let acorn_width: f32 = sprites[acorn.sprites_index].screen_region[2];
-                //let acorn_height: f32 = sprites[acorn.sprites_index].screen_region[3];
+                sprites[large_fish.sprites_index].screen_region = large_fish.screen_region;
 
                 let mut man_x: f32 = sprites[fisherman.sprites_index].screen_region[0];
                 let man_y: f32 = sprites[fisherman.sprites_index].screen_region[1];
@@ -881,6 +901,11 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 let fish_y: f32 = sprites[fish.sprites_index].screen_region[1];
                 let mut fish_width: f32 = sprites[fish.sprites_index].screen_region[2];
                 let fish_height: f32 = sprites[fish.sprites_index].screen_region[3];
+
+                let mut large_fish_x: f32 = sprites[large_fish.sprites_index].screen_region[0];
+                let large_fish_y: f32 = sprites[large_fish.sprites_index].screen_region[1];
+                let mut large_fish_width: f32 = sprites[large_fish.sprites_index].screen_region[2];
+                let large_fish_height: f32 = sprites[large_fish.sprites_index].screen_region[3];
                 
                 // Check for collisions
                 if (hook_x + hook_width > fish_x) && (hook_x < fish_x + fish_width)
@@ -890,6 +915,20 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                     if !gs.score_changing{
                         gs.score += 1;
+                        let score_text = format!("Score: {}", gs.score);
+                        // buffer.set_text(&mut font_system, &gs.score.to_string(), Attrs::new().family(Family::SansSerif), Shaping::Advanced);    
+                        buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
+                        gs.score_changing = true;
+                    }
+
+                }
+                else if (hook_x + hook_width > large_fish_x) && (hook_x < large_fish_x + large_fish_width)
+                    && (hook_y - hook_height + 70.0 < large_fish_y) && (hook_y + 38.0 > large_fish_y - large_fish_height) {
+                    // Collision detected, handle it here
+                    large_fish.reset_x();
+
+                    if !gs.score_changing{
+                        gs.score += 2;
                         let score_text = format!("Score: {}", gs.score);
                         // buffer.set_text(&mut font_system, &gs.score.to_string(), Attrs::new().family(Family::SansSerif), Shaping::Advanced);    
                         buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
