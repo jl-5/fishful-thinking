@@ -3,7 +3,7 @@ pub struct GameState{
     pub score: usize,
     pub score_changing: bool,
     pub is_currently_casted: bool,
-    // 0 = title, 1 = play, 2 = end,
+    // 0 = title, 1 = instructions, 2 = play, 3 = end,
     pub game_screen: usize,
     pub secs_left: usize,
     pub time_since_last_update: f32,
