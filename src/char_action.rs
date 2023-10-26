@@ -8,6 +8,9 @@ pub struct Char_action {
     pub speed: f32,
     pub facing_left: bool,
     pub sprites_index: usize,
+    pub caught: bool,
+    pub vibrate_state: bool,
+    pub vibrate_counter: usize,
 
 }
 
@@ -26,7 +29,10 @@ impl Char_action {
                 current_animation_index: (cur_anim_index),
                 speed: (spe), 
                 facing_left: (facing_lef), 
-                sprites_index: (sprites_ind), }
+                sprites_index: (sprites_ind),
+                caught: false,
+                vibrate_state: false,
+                vibrate_counter: 0 }
     }
 
     pub fn walk(&mut self){
@@ -83,8 +89,15 @@ impl Char_action {
         self.screen_region[0] += self.speed;
 
         if self.screen_region[0] >= 1024.0 {
-            self.screen_region[0] = 0.0;
-            self.screen_region[1] = rand::thread_rng().gen_range(200..500) as f32;
+            self.reset_x();
+        }
+    }
+
+    pub fn move_left(&mut self) {
+        self.screen_region[0] -= self.speed;
+
+        if self.screen_region[0] <= -70.0 {
+            self.reset_x();
         }
     }
 
@@ -97,9 +110,27 @@ impl Char_action {
         }
     }
 
+    pub fn deep_move_left(&mut self) {
+        self.screen_region[0] -= self.speed;
+
+        if self.screen_region[0] <= -70.0 {
+            self.screen_region[0] = 1024.0;
+            self.screen_region[1] = rand::thread_rng().gen_range(0..100) as f32;
+        }
+    }
+
     pub fn reset_x(&mut self){
-        self.screen_region[0] = 1024.0;
-        self.screen_region[1] = rand::thread_rng().gen_range(0..500) as f32;
+        let chance = rand::thread_rng().gen_range(0..2) as usize;
+        if chance == 0 {
+            self.screen_region[0] = 1024.0;
+            self.screen_region[1] = rand::thread_rng().gen_range(0..500) as f32;
+            self.facing_left = true;
+        }
+        else {
+            self.screen_region[0] = 0.0;
+            self.screen_region[1] = rand::thread_rng().gen_range(0..500) as f32;
+            self.facing_left = false;
+        }
     }
 
     pub fn reset_y(&mut self){

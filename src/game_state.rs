@@ -5,6 +5,8 @@ pub struct GameState{
     pub is_currently_casted: bool,
     // 0 = title, 1 = play, 2 = end,
     pub game_screen: usize,
+    pub secs_left: usize,
+    pub time_since_last_update: f32,
 }
 
 impl GameState {
@@ -16,6 +18,8 @@ impl GameState {
             score_changing : false,
             is_currently_casted: false,
             game_screen: 0,
+            secs_left: 30,
+            time_since_last_update: 0.0
         }
     }
 }

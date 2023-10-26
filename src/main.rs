@@ -70,7 +70,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     
     buffer.set_size(&mut font_system, physical_width, physical_height);
 
-    let score_text = format!("Score: {}", gs.score);
+    let score_text = format!("Score: {}     Timer: {}", gs.score, gs.secs_left);
     buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
     buffer.shape_until_scroll(&mut font_system);
 
@@ -277,7 +277,8 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut brush_size = 10_i32;
     let (img_bg_w, img_bg_h) = img_bg.dimensions();
     let mut start = Instant::now();
-    let time_limit = 90;
+    let mut last_second = Instant::now();
+    let time_limit = gs.secs_left;
 
 
     #[repr(C)]
@@ -727,6 +728,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                     else if gs.game_screen == 2 {
                         rpass.set_pipeline(&render_pipeline_bg);
+                        
                         // Attach the bind group for group 0
                         rpass.set_bind_group(0, &tex_end_bind_group, &[]);
                         // Now draw two triangles!
@@ -773,23 +775,87 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
             }
             Event::MainEventsCleared => {
 
+                let mut last_frame = Instant::now();
+
                 if gs.game_screen == 1 {
                     let mut new_now = Instant::now();
-                    if new_now.duration_since(start) >= Duration::from_secs(time_limit)
+                    if new_now.duration_since(start) >= Duration::from_secs(time_limit as u64)
                     {
                         gs.game_screen = 2;
+                        let score_text = format!("Score: {}     Timer: {}", gs.score, gs.secs_left);
+                        // buffer.set_text(&mut font_system, &gs.score.to_string(), Attrs::new().family(Family::SansSerif), Shaping::Advanced);    
+                        buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
+                        last_second = Instant::now();
+
                     }
                     // println!(
                     //     ">You have {:?} seconds left!!!<",
                     //     Duration::from_secs(time_limit).as_secs() - new_now.duration_since(start).as_secs()
                     // );
+
+                    if new_now.duration_since(last_second).as_secs() >= 1 {
+                        gs.secs_left -= 1;
+                        let score_text = format!("Score: {}     Timer: {}", gs.score, gs.secs_left);
+                        // buffer.set_text(&mut font_system, &gs.score.to_string(), Attrs::new().family(Family::SansSerif), Shaping::Advanced);    
+                        buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
+                        last_second = Instant::now();
+
+                    }
+                    //println!("{}", gs.time_since_last_update);
+
                 }
 
-                fish.move_right();
-                large_fish.deep_move_right();
+                
+
+                
+                if fish.caught {
+                    fish.vibrate_counter += 1;
+                    if fish.vibrate_counter > 30{
+                        if fish.vibrate_state{
+                            fish.move_left();
+                            fish.vibrate_state = false;
+                        }
+                        else {
+                            fish.move_right();
+                            fish.vibrate_state = true;
+                        }
+                        fish.vibrate_counter = 0;
+                    }
+                }
+                else {
+                    if fish.facing_left{
+                        fish.move_left();
+                    }
+                    else {
+                        fish.move_right();
+                    }   
+                }
+                
+                if large_fish.caught {
+                    large_fish.vibrate_counter += 1;
+                    if large_fish.vibrate_counter > 30{
+                        if large_fish.vibrate_state{
+                            large_fish.move_left();
+                            large_fish.vibrate_state = false;
+                        }
+                        else {
+                            large_fish.move_right();
+                            large_fish.vibrate_state = true;
+                        }
+                        large_fish.vibrate_counter = 0;
+                    }
+                } else {
+                    if large_fish.facing_left{
+                        large_fish.deep_move_left();
+                    }
+                    else {
+                        large_fish.deep_move_right();
+                    }
+                }
 
                 if input.is_key_down(winit::event::VirtualKeyCode::Return) && gs.game_screen==0 {
                     start = Instant::now();
+                    last_second = Instant::now();
                     gs.game_screen = 1;
                 }
 
@@ -799,11 +865,12 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                 if input.is_key_down(winit::event::VirtualKeyCode::A) && gs.game_screen==2 {
                     gs.game_screen = 0;
-                    gs.score = 0;
                     gs.is_currently_casted = false;
                     hook.screen_region = [20.0, 200.0, 0.0, 0.0];
                     fisherman.screen_region = [100.0, 600.0, 100.0, 100.0];
                     line.screen_region = [100.0, 540.0, 0.0, 0.0];
+                    fish.reset_x();
+                    large_fish.reset_x();
                 }
 
                 else if input.is_key_down(winit::event::VirtualKeyCode::Left) {
@@ -824,6 +891,14 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                     if gs.is_currently_casted{
                         hook.travel_down();
                         line.scale_elongate(hook.screen_region[1], 250.0);
+
+                        if fish.caught {
+                            fish.travel_down();
+                        }
+
+                        if large_fish.caught {
+                            large_fish.travel_down();
+                        }
                     }
                 }
                 else if input.is_key_down(winit::event::VirtualKeyCode::Up) {
@@ -834,8 +909,49 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                             gs.is_currently_casted = false;
                             fisherman.set_animation_index(3);
                             fisherman.reset_current_animation();
+                            if fish.caught && !large_fish.caught {
+                                if !gs.score_changing{
+                                    gs.score += 1;
+                                    let score_text = format!("Score: {}     Timer: {}", gs.score, gs.secs_left);
+                                    // buffer.set_text(&mut font_system, &gs.score.to_string(), Attrs::new().family(Family::SansSerif), Shaping::Advanced);    
+                                    buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
+                                    gs.score_changing = true;
+                                }
+                                fish.caught = false;
+                                fish.reset_x();
+                            }
+                            else if large_fish.caught && !fish.caught {
+                                if !gs.score_changing{
+                                    gs.score += 2;
+                                    let score_text = format!("Score: {}     Timer: {}", gs.score, gs.secs_left);
+                                    // buffer.set_text(&mut font_system, &gs.score.to_string(), Attrs::new().family(Family::SansSerif), Shaping::Advanced);    
+                                    buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
+                                    gs.score_changing = true;
+                                }
+                                large_fish.caught = false;
+                                large_fish.reset_x();
+                            }
+                            else if large_fish.caught && fish.caught {
+                                if !gs.score_changing{
+                                    gs.score += 4;
+                                    let score_text = format!("Score: {}     Timer: {}", gs.score, gs.secs_left);
+                                    // buffer.set_text(&mut font_system, &gs.score.to_string(), Attrs::new().family(Family::SansSerif), Shaping::Advanced);    
+                                    buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
+                                    gs.score_changing = true;
+                                }
+                                large_fish.caught = false;
+                                large_fish.reset_x();
+                                fish.caught = false;
+                                fish.reset_x();
+                            }
                         }
                         hook.travel_up();
+                        if fish.caught {
+                            fish.travel_up();
+                        }
+                        if large_fish.caught {
+                            large_fish.travel_up();
+                        }
                         line.scale_elongate(hook.screen_region[1], 250.0);
                     }
                 }
@@ -911,8 +1027,16 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 if (hook_x + hook_width > fish_x) && (hook_x < fish_x + fish_width)
                     && (hook_y - hook_height + 70.0 < fish_y) && (hook_y + 38.0 > fish_y - fish_height) {
                     // Collision detected, handle it here
-                    fish.reset_x();
+                    //fish.reset_x();
+                    if !fish.caught{
+                        fish.screen_region[0] = hook.screen_region[0];
+                        fish.screen_region[1] = hook.screen_region[1];
+                    }
+                    fish.caught = true;
+                    fish.speed = hook.speed;
 
+
+                    /*
                     if !gs.score_changing{
                         gs.score += 1;
                         let score_text = format!("Score: {}", gs.score);
@@ -920,13 +1044,21 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                         buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
                         gs.score_changing = true;
                     }
-
+                    */
                 }
                 else if (hook_x + hook_width > large_fish_x) && (hook_x < large_fish_x + large_fish_width)
                     && (hook_y - hook_height + 70.0 < large_fish_y) && (hook_y + 38.0 > large_fish_y - large_fish_height) {
                     // Collision detected, handle it here
-                    large_fish.reset_x();
+                    //large_fish.reset_x();
+                    if !large_fish.caught{
+                        large_fish.screen_region[0] = hook.screen_region[0];
+                        large_fish.screen_region[1] = hook.screen_region[1];
+                    }
+                    large_fish.caught = true;
+                    large_fish.speed = hook.speed;
 
+
+                    /*
                     if !gs.score_changing{
                         gs.score += 2;
                         let score_text = format!("Score: {}", gs.score);
@@ -934,7 +1066,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                         buffer.set_text(&mut font_system, &score_text, Attrs::new().family(Family::SansSerif), Shaping::Advanced);
                         gs.score_changing = true;
                     }
-
+                    */
                 }
                 else{gs.score_changing = false;}
                 
