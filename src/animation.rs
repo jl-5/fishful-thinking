@@ -12,6 +12,7 @@ pub struct Animation {
     pub(crate) sprite_width: f32,
 
     pub(crate) is_looping: bool,
+    pub(crate) is_done: bool,
 }
 
 impl Animation {

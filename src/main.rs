@@ -347,6 +347,22 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
     ];
 
+
+    let mut fisherman_reeling_frames: Vec<[f32; 4]> = vec![
+
+    // frame 1 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 2.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
+    
+    // frame 2 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 3.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
+     
+    // frame 3 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 4.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
+
+    // frame 4 sheet position
+    [(((192.0/sprite_sheet_dimensions.0)/4.0) * 5.0), 114.0/sprite_sheet_dimensions.1, ((192.0/sprite_sheet_dimensions.0)/4.0) - (fisherman_casting_offset/sprite_sheet_dimensions.0), 48.0/sprite_sheet_dimensions.1],
+    ];
+
     // hook is just one frame
     let mut hook_frames: Vec<[f32; 4]> = vec![
 
@@ -408,6 +424,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_facing_left: false,
         sprite_width: sprites[0].sheet_region[2],
         is_looping: true,
+        is_done: false,
     };
 
     let fisherman_walking_animation: Animation = Animation {
@@ -418,6 +435,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_facing_left: false,
         sprite_width: sprites[0].sheet_region[2],
         is_looping: true,
+        is_done: false,
     };
 
     let fisherman_casting_animation: Animation = Animation {
@@ -428,6 +446,18 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_facing_left: false,
         sprite_width: 0.0885608856,
         is_looping: false,
+        is_done: false,
+    };
+
+    let fisherman_reeling_animation: Animation = Animation {
+        states: fisherman_reeling_frames,
+        frame_counter: 0,
+        rate: 12,
+        state_number: 0,
+        is_facing_left: false,
+        sprite_width: 0.0885608856,
+        is_looping: false,
+        is_done: false,
     };
 
     let hook_animation: Animation = Animation {
@@ -438,6 +468,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_facing_left: false,
         sprite_width: 100.0,
         is_looping: true,
+        is_done: false,
     };
 
     let fish_animation: Animation = Animation {
@@ -448,6 +479,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_facing_left: false,
         sprite_width: sprites[2].sheet_region[2],
         is_looping: true,
+        is_done: false,
     };
 /* 
     let acorn_animation: Animation = Animation {
@@ -462,7 +494,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut fisherman = char_action::Char_action::new(
         sprites[0].screen_region,
         sprites[0].sheet_region,
-        vec![fisherman_idle_animation, fisherman_walking_animation, fisherman_casting_animation],
+        vec![fisherman_idle_animation, fisherman_walking_animation, fisherman_casting_animation, fisherman_reeling_animation],
         0,
         2.0,
         false,
@@ -752,7 +784,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                         if hook.screen_region[1] == 500.0 {
                             hook.hide();
                             gs.is_currently_casted = false;
-                            fisherman.set_animation_index(0)
+                            fisherman.set_animation_index(3);
                         }
                         hook.travel_up();
                     }

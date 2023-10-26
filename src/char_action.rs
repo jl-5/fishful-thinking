@@ -26,7 +26,7 @@ impl Char_action {
                 current_animation_index: (cur_anim_index),
                 speed: (spe), 
                 facing_left: (facing_lef), 
-                sprites_index: (sprites_ind) }
+                sprites_index: (sprites_ind), }
     }
 
     pub fn walk(&mut self){
@@ -110,5 +110,9 @@ impl Char_action {
         }
         return self.animations[self.current_animation_index].get_current_state();
         
+    }
+
+    pub fn reset_current_animation(&mut self){
+        self.animations[self.current_animation_index].state_number = 0;
     }
 }
