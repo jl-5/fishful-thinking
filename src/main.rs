@@ -383,14 +383,11 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut fish_frames: Vec<[f32; 4]> = vec![
         //fish 1 positions
         [0.0/sprite_sheet_dimensions.0, 1.0/sprite_sheet_dimensions.1, 12.0/sprite_sheet_dimensions.0, 6.0/sprite_sheet_dimensions.1],
-
         [12.0/sprite_sheet_dimensions.0, 1.0/sprite_sheet_dimensions.1, 12.0/sprite_sheet_dimensions.0, 6.0/sprite_sheet_dimensions.1],
 
-        //fish 2 positions
-        [26.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
-
-        [43.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
-
+        // //fish 2 positions
+        // [26.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
+        // [43.0/sprite_sheet_dimensions.0, 2.0/sprite_sheet_dimensions.1, 17.0/sprite_sheet_dimensions.0/1.0, 12.0/sprite_sheet_dimensions.1],
     ];
     let mut sprites: Vec<GPUSprite> = vec![
         // FISHERMAN
@@ -404,34 +401,32 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         screen_region: [20.0, 200.0, 0.0, 0.0],
         sheet_region: hook_frames[0],   
     },
-        // FISH1A
-    GPUSprite {
-        screen_region: [20.0, 20.0, 50.0, 30.0],
-        sheet_region: fish_frames[0],
-    },
-        // FISH1B
-    GPUSprite {
-        screen_region: [20.0, 40.0, 50.0, 30.0],
-        sheet_region: fish_frames[1],
-    },
-        // FISH2A
-    GPUSprite {
-        screen_region: [20.0, 60.0, 50.0, 30.0],
-        sheet_region: fish_frames[2],
-    },
-        // FISH2B
-    GPUSprite {
-        screen_region: [20.0, 80.0, 50.0, 30.0],
-        sheet_region: fish_frames[3],
-    },
-
     // FISHING LINE
     // have line also not be visible at start
     GPUSprite {
         screen_region: [100.0, 540.0, 0.0, 0.0],
         sheet_region: line_frames[0],
     },
-
+        // FISH1A
+    GPUSprite {
+        screen_region: [20.0, 20.0, 50.0, 30.0],
+        sheet_region: fish_frames[0],
+    },
+    //     // FISH1B
+    // GPUSprite {
+    //     screen_region: [20.0, 40.0, 50.0, 30.0],
+    //     sheet_region: fish_frames[1],
+    // },
+    //     // FISH2A
+    // GPUSprite {
+    //     screen_region: [20.0, 60.0, 50.0, 30.0],
+    //     sheet_region: fish_frames[2],
+    // },
+    //     // FISH2B
+    // GPUSprite {
+    //     screen_region: [20.0, 80.0, 50.0, 30.0],
+    //     sheet_region: fish_frames[3],
+    // },
     ];
 
     let fisherman_idle_animation: Animation = Animation {
@@ -489,8 +484,8 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_done: false,
     };
 
-    let fish_animation: Animation = Animation {
-        states: fish_frames,
+    let line_animation: Animation = Animation {
+        states: line_frames,
         frame_counter: 0,
         rate: 50,
         state_number: 0,
@@ -500,26 +495,17 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         is_done: false,
     };
 
-    let line_animation: Animation = Animation {
-        states: line_frames,
+    let fish_animation: Animation = Animation {
+        states: fish_frames,
         frame_counter: 0,
-        rate: 50,
+        rate: 6,
         state_number: 0,
         is_facing_left: false,
-        sprite_width: sprites[6].sheet_region[2],
+        sprite_width: sprites[3].sheet_region[2],
         is_looping: true,
         is_done: false,
     };
-/* 
-    let acorn_animation: Animation = Animation {
-        states: [sprites[1].sheet_region].to_vec(),
-        frame_counter: 0,
-        rate: 7,
-        state_number: 0,
-        is_facing_left: false,
-        sprite_width: sprites[0].sheet_region[2],
-    };
-*/
+
     let mut fisherman = char_action::Char_action::new(
         sprites[0].screen_region,
         sprites[0].sheet_region,
@@ -542,38 +528,27 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     );
 
     let mut line: Char_action = char_action::Char_action::new(
-        sprites[6].screen_region,
-        sprites[6].sheet_region,
-        vec![line_animation],
-        0,
-        3.0,
-        false,
-        6
-        
-    );
-
-    let mut fish: Char_action = char_action::Char_action::new(
         sprites[2].screen_region,
         sprites[2].sheet_region,
-        vec![fish_animation],
+        vec![line_animation],
         0,
         3.0,
         false,
         2
         
     );
-    
 
-    /* 
-    let mut acorn = char_action::Char_action::new(
-        sprites[1].screen_region,
-        acorn_animation,
+    let mut fish: Char_action = char_action::Char_action::new(
+        sprites[3].screen_region,
+        sprites[3].sheet_region,
+        vec![fish_animation],
+        0,
         2.0,
-        true,
-        1,
+        false,
+        3
+        
     );
-    */
-
+    
     let buffer_camera = gpu.device.create_buffer(&wgpu::BufferDescriptor{
         label: None,
         size: bytemuck::bytes_of(&camera).len() as u64,
@@ -631,8 +606,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 window.request_redraw();
             }
             Event::RedrawRequested(_) => {
-                // TODO: move sprites, maybe scroll camera
-                
 
                 // Then send the data to the GPU!
                 gpu.queue.write_buffer(&buffer_camera, 0, bytemuck::bytes_of(&camera));
@@ -783,6 +756,10 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                     {
                         gs.game_screen = 2;
                     }
+                    // println!(
+                    //     ">You have {:?} seconds left!!!<",
+                    //     Duration::from_secs(time_limit).as_secs() - new_now.duration_since(start).as_secs()
+                    // );
                 }
 
                 fish.move_right();
@@ -802,6 +779,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                     gs.is_currently_casted = false;
                     hook.screen_region = [20.0, 200.0, 0.0, 0.0];
                     fisherman.screen_region = [100.0, 600.0, 100.0, 100.0];
+                    line.screen_region = [100.0, 540.0, 0.0, 0.0];
                 }
 
                 else if input.is_key_down(winit::event::VirtualKeyCode::Left) {
@@ -881,29 +859,34 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 sprites[fisherman.sprites_index].sheet_region = fisherman.get_current_animation_state();
                 sprites[fisherman.sprites_index].screen_region = fisherman.screen_region;
                 sprites[hook.sprites_index].screen_region = hook.screen_region;
-                sprites[fish.sprites_index].screen_region = fish.screen_region;
                 sprites[line.sprites_index].screen_region = line.screen_region;
-
-                //sprites[acorn.sprites_index].screen_region = acorn.screen_region;
+                sprites[fish.sprites_index].screen_region = fish.screen_region;
 
                 //let acorn_x: f32 = sprites[acorn.sprites_index].screen_region[0];
                 //let acorn_y: f32 = sprites[acorn.sprites_index].screen_region[1];
                 //let acorn_width: f32 = sprites[acorn.sprites_index].screen_region[2];
                 //let acorn_height: f32 = sprites[acorn.sprites_index].screen_region[3];
 
-                let mut squirrel_x: f32 = sprites[fisherman.sprites_index].screen_region[0];
-                let squirrel_y: f32 = sprites[fisherman.sprites_index].screen_region[1];
-                let mut squirrel_width: f32 = sprites[fisherman.sprites_index].screen_region[2];
-                let squirrel_height: f32 = sprites[fisherman.sprites_index].screen_region[3];
+                let mut man_x: f32 = sprites[fisherman.sprites_index].screen_region[0];
+                let man_y: f32 = sprites[fisherman.sprites_index].screen_region[1];
+                let mut man_width: f32 = sprites[fisherman.sprites_index].screen_region[2];
+                let man_height: f32 = sprites[fisherman.sprites_index].screen_region[3];
 
-                /*
+                let mut hook_x: f32 = sprites[hook.sprites_index].screen_region[0];
+                let hook_y: f32 = sprites[hook.sprites_index].screen_region[1];
+                let mut hook_width: f32 = sprites[hook.sprites_index].screen_region[2];
+                let hook_height: f32 = sprites[hook.sprites_index].screen_region[3];
+
+                let mut fish_x: f32 = sprites[fish.sprites_index].screen_region[0];
+                let fish_y: f32 = sprites[fish.sprites_index].screen_region[1];
+                let mut fish_width: f32 = sprites[fish.sprites_index].screen_region[2];
+                let fish_height: f32 = sprites[fish.sprites_index].screen_region[3];
+                
                 // Check for collisions
-                if (acorn_x + acorn_width > squirrel_x) && (acorn_x < squirrel_x + squirrel_width)
-                    && (acorn_y - acorn_height < squirrel_y) && (acorn_y > squirrel_y - squirrel_height) {
+                if (hook_x + hook_width > fish_x) && (hook_x < fish_x + fish_width)
+                    && (hook_y - hook_height < fish_y) && (hook_y > fish_y - fish_height) {
                     // Collision detected, handle it here
-                    nut_count += 1;
-                    //acorn.speed += 0.1;
-                    //acorn.reset_y();
+                    fish.reset_x();
 
                     if !gs.score_changing{
                         gs.score += 1;
@@ -915,7 +898,8 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                 }
                 else{gs.score_changing = false;}
-                */
+                
+                
                 window.request_redraw();
             }
             _ => {}

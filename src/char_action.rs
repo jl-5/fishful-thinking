@@ -89,7 +89,7 @@ impl Char_action {
     }
     pub fn reset_x(&mut self){
         self.screen_region[0] = 1024.0;
-        self.screen_region[1] = rand::thread_rng().gen_range(0..769) as f32;
+        self.screen_region[1] = rand::thread_rng().gen_range(0..500) as f32;
     }
 
     pub fn reset_y(&mut self){
